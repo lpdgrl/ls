@@ -2,26 +2,48 @@
 
 #include "lshelper.hpp"
 
-namespace ls {
+namespace Ls {
     class Directory {
     public:
+        using Entries = std::vector<detail::FileInfo>;
+
         Directory() = delete;
         explicit Directory(const std::string& path);
 
         ~Directory() = default;
 
+        void ParseDir(); 
+        void ParseEntryAttribute(bool human_output);
+
+        const Entries& GetEntries() const noexcept;
+        size_t GetMaxLengthEntry() const noexcept;
+
+        void SetSortCallback(std::function<bool(const detail::FileInfo& lhs, 
+                            const detail::FileInfo& rhs)> callback) noexcept;
+
+    private:
+        std::string NormalizePath(const std::string& path) noexcept;
+        std::string SearchUserNameByUid(detail::Uid uid);
+        std::string SearchGroupNameByGid(detail::Gid gid);
+
+        void FillingFileInfo(detail::FileInfo& file_info, detail::Stat& stat_info);
+
+        void SortEntries();
 
     private:
         size_t max_length_entry_ = 0;
         std::string path_;
-        std::vector<detail::FileInfo> entries_;
+
+        Entries entries_;
         std::unique_ptr<DIR, detail::DirCloser> dir_;
+
+        std::function<bool(const detail::FileInfo& lhs, const detail::FileInfo& rhs)> callback_sort_;
     };
 
     class Ls {
     public:
         Ls() = delete;
-        Ls(const std::string& path, detail::Options option);
+        Ls(const std::string& path, detail::Option_t option);
 
         Ls(const Ls& other) = delete;
         Ls(Ls&& other) = delete;
@@ -34,8 +56,11 @@ namespace ls {
         ~Ls() = default;
 
     private:
-        detail::Options options_display_;
+        detail::Option_t format_options_;
         Directory directory_;
+
+        void SimpeDisplay() const noexcept;
+        void LongFormatDisplay() const;
     };
 }
 
