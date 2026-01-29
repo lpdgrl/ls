@@ -1,3 +1,5 @@
 # !/bin/bash
 
-cd build && ./ls
+cd build 
+
+./ls $1 $2

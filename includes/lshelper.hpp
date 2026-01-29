@@ -21,7 +21,6 @@
 #include <sstream>
 #include <iostream>
 #include <functional>
-#include <bitset>
 
 namespace Ls::detail {
     using Option_t = uint8_t;
@@ -39,25 +38,45 @@ namespace Ls::detail {
         HumanFormat     = 0b00000010,
         SimpleFormat    = 0b00000001,
     };
+
+    enum class TypeDate {
+        Day = 0,
+        Month = 1,
+        Year  = 2,
+        AllFormat = 3,
+    };
+
+    struct ColorFile {
+        static constexpr const char* BLUE  = "\033[34m";
+        static constexpr const char* MAGNETA   = "\033[35m";
+        static constexpr const char* RESET = "\033[0m";
+    };
     
     struct FileInfo {
         char fi_type_file;
-        std::uint32_t fi_nlink_count;
-        std::uint64_t fi_size;
+        bool is_directory = false;
+        bool is_symbol_link = false;
+        std::string fi_nlink_count;
+        std::string fi_size;
         std::string fi_name;
-        std::string fi_date_last_mod;
+        std::string fi_date_lm_day;
+        std::string fi_date_lm_month;
+        std::string fi_date_lm_year;
         std::string fi_perms;
         std::string fi_gid;
         std::string fi_uid;
     };
 
-    std::string PermsToString(ModeFile mode);
     char FileTypesToString(ModeFile mode);
-    std::string DateLastModToString(TimeSpec ts);
+
+    std::string PermsToString(ModeFile mode);
+    std::string DateLastModToString(TimeSpec ts, TypeDate td);
+    std::string DateFormat(const std::chrono::nanoseconds& ns_sice_epoch,
+                           const std::chrono::nanoseconds& total_ns, TypeDate td);
 
     void DumpPerms(std::ostream& out, ModeFile mode);
     void DumpTypeFiles(std::ostream& out, ModeFile mode);
-    void DumpDate(std::ostream& out, TimeSpec timespec);    
+    void DumpDate(std::ostream& out, TimeSpec timespec, TypeDate td);    
 
     bool CheckErrno(std::ostream& out, const std::string& method_call);
     void ResetErrno();

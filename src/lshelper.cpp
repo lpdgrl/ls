@@ -2,9 +2,10 @@
 
 namespace Ls::detail {
 
-    std::string DateLastModToString(TimeSpec ts) {
+    std::string DateLastModToString(TimeSpec ts, TypeDate td) {
         namespace krn = std::chrono;
 
+        // This code snippet is taken from stackoverflow
         std::tm t = {};
         t.tm_year = 2025 - 1900; // Years since 1900
         t.tm_mon = 7 - 1;   // Months since January (0-11)
@@ -33,11 +34,36 @@ namespace Ls::detail {
         std::tm* tm = std::localtime(&tt);
 
         std::stringstream ss;
-        std::string format_date = (nanoseconds_since_epoch > total_ns) ? "%b %e %Y" : "%b %e %H:%M";
+        std::string format_date = DateFormat(nanoseconds_since_epoch, total_ns, td);
 
         ss << std::put_time(tm, format_date.c_str());
     
         return ss.str();
+    }
+
+    std::string DateFormat(const std::chrono::nanoseconds& ns_sice_epoch,
+                           const std::chrono::nanoseconds& total_ns, TypeDate td) 
+    {
+        std::string format_date; 
+
+        switch (td) {
+            case TypeDate::Day: 
+                format_date = "%e";
+                break;
+            case TypeDate::Month:
+                format_date = "%b";
+                break;
+            case TypeDate::Year:
+                format_date = (ns_sice_epoch > total_ns) ? "%Y" : "%H:%M";
+                break;
+            case TypeDate::AllFormat:
+                format_date = (ns_sice_epoch > total_ns) ? "%b %e %Y" : "%b %e %H:%M";
+                break;
+            default:
+                break;
+        }
+
+        return format_date;
     }
 
     std::string PermsToString(ModeFile mode) {
@@ -59,9 +85,7 @@ namespace Ls::detail {
     char FileTypesToString(ModeFile mode) {
         char result;
 
-        result = (S_ISDIR(mode) ? 'd' : S_ISBLK(mode) ? 'b' 
-                    : S_ISCHR(mode) ? 'c' : S_ISLNK(mode) ? 'l' 
-                        : S_ISREG(mode) ? '-' : '\0');
+        result = (S_ISDIR(mode) ? 'd' : S_ISBLK(mode) ? 'b' : S_ISCHR(mode) ? 'c' : S_ISLNK(mode) ? 'l' : S_ISREG(mode) ? '-' : '\0');
 
         return result;
     }
@@ -74,8 +98,8 @@ namespace Ls::detail {
         out << FileTypesToString(type);
     }
 
-    void DumpDate(std::ostream& out, TimeSpec ts) {
-        out << DateLastModToString(ts);
+    void DumpDate(std::ostream& out, TimeSpec ts, TypeDate td) {
+        out << DateLastModToString(ts, td);
     }
 
     bool CheckErrno(std::ostream& out, const std::string& method_call) {
@@ -83,9 +107,6 @@ namespace Ls::detail {
             out << method_call << ' ' << std::strerror(errno) << '\n';
             return true;
         } else if (errno == EACCES) {
-            out << method_call << ' ' << std::strerror(errno) << '\n';
-            return true;
-        } else if (errno = EBADF) {
             out << method_call << ' ' << std::strerror(errno) << '\n';
             return true;
         } else if (errno = EIO) {
