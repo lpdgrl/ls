@@ -63,6 +63,4 @@ bash run.sh -lr /bin/
 
 Ниже показана короткая демонстрация работы утилиты в стандартном режиме, а также с опциями `-l`, `-h` и `-r`.
 
-![me](https://github.com/lpdgrl/ls/tree/main/img/ls.gif)
-
-
+<img src="./img/ls.gif"/>
